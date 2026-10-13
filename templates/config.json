@@ -4,17 +4,14 @@
       "name": "claude-code",
       "app_id": "${FEISHU_APP_ID}",
       "app_secret": "${FEISHU_APP_SECRET}",
-      "workspace": "/Users/apple/.local/share/feishu-bridge/workspaces/claude-code",
+      "workspace": "$HOME/.local/share/feishu-bridge/workspaces/claude-code",
       "allowed_users": ["*"]
     }
   ],
   "agent": {
     "type": "claude",
-    "command": "claude",
+    "command": "$HOME/.npm-global/bin/claude",
     "timeout_seconds": 300,
-    "args": [
-      "--mcp-config",
-      "/Users/apple/.local/share/feishu-bridge/workspaces/claude-code/.claude/.mcp.json"
-    ]
+    "args": ["--permission-mode", "bypassPermissions"]
   }
 }
