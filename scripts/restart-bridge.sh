@@ -34,12 +34,13 @@ fi
 echo
 echo "── 3/3 补丁生效检查 ─────────────────────"
 # 补丁改的是 pip 包内代码，重启后才加载。这里确认两个补丁都在位。
-for p in patch-ui.sh patch-post-image.sh; do
+for p in patch-ui.sh patch-post-image.sh patch-tool-list.sh; do
     [ -f "$SCRIPT_DIR/$p" ] || continue
     STATE="$(bash "$SCRIPT_DIR/$p" status 2>/dev/null | grep '补丁状态:' | awk '{print $2}')"
     case "$p" in
         patch-ui.sh)         DESC="禁用失效的 agent_status 元素" ;;
         patch-post-image.sh) DESC="图文混排时提取图片" ;;
+        patch-tool-list.sh)  DESC="工具调用列表编号逐行显示" ;;
         *)                   DESC="$p" ;;
     esac
     if [ "$STATE" = "已打" ]; then

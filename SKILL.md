@@ -119,6 +119,8 @@ bash scripts/watchdog.sh --install   # 装成定时任务（launchd/systemd time
 bash scripts/patch-ui.sh status      # 查看可选补丁状态
 bash scripts/patch-ui.sh apply       # 打补丁（自动备份、可 revert）
 bash scripts/patch-post-image.sh status   # 查看图文混排修复状态
+bash scripts/patch-tool-list.sh status    # 查看工具列表编号化状态
+bash scripts/restart-bridge.sh            # 一键重启 + 补丁生效检查
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 
