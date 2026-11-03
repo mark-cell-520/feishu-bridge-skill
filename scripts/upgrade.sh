@@ -121,25 +121,22 @@ fi
 
 # ── 4. ui.py 补丁检测（pip 升级会覆盖它）──────────────────────
 step "3.5/5 检测 ui.py 补丁"
-if [ -f "$SCRIPT_DIR/patch-ui.sh" ]; then
-    PATCH_STATE="$(bash "$SCRIPT_DIR/patch-ui.sh" status 2>/dev/null | grep '补丁状态:' | awk '{print $2}')"
-    if [ "$PATCH_STATE" = "已打" ]; then
-        echo "✅ ui.py 补丁仍在（升级未覆盖，或尚未被覆盖）"
+# 逐个检测已知补丁：有备份但 marker 不在 = 被本次升级覆盖了
+check_patch() {
+    local script="$1" name="$2" bakpat="$3"
+    [ -f "$SCRIPT_DIR/$script" ] || { echo "ℹ️ $name: 无补丁脚本，跳过"; return; }
+    local state
+    state="$(bash "$SCRIPT_DIR/$script" status 2>/dev/null | grep '补丁状态:' | awk '{print $2}')"
+    if [ "$state" = "已打" ]; then
+        echo "✅ $name 补丁仍在"
+    elif ls "$STATE_HOME/patches/$bakpat"* >/dev/null 2>&1; then
+        echo "⚠️ $name 补丁被本次升级覆盖了，需重打: bash scripts/$script apply"
     else
-        # 补丁不见了：要么从没打过，要么被本次 pip 升级覆盖了。
-        # 有备份但 marker 不在，就是被覆盖，需要重打。
-        if ls "$STATE_HOME/patches/ui.py.pre-patch-"* >/dev/null 2>&1; then
-            echo "⚠️ 曾经打过 ui.py 补丁，但本次升级已将其覆盖"
-            echo "   重打: bash scripts/patch-ui.sh apply"
-            echo "   备份仍在: $STATE_HOME/patches/"
-        else
-            echo "ℹ️ 未打过 ui.py 补丁（可选：禁用一个持续失败的卡片元素）"
-            echo "   详见: bash scripts/patch-ui.sh status"
-        fi
+        echo "ℹ️ $name 未打过补丁（可选，详见 bash scripts/$script status）"
     fi
-else
-    echo "ℹ️ 本版本无 patch-ui.sh，跳过"
-fi
+}
+check_patch "patch-ui.sh"        "ui.py（禁用失效的 agent_status 元素）" "ui.py.pre-patch-"
+check_patch "patch-post-image.sh" "main.py（图文混排时提取图片）"        "main.py.pre-post-image-"
 
 # ── 4. 重启服务 ─────────────────────────────────────────────────
 step "4/5 重启服务"

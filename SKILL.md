@@ -118,6 +118,7 @@ bash scripts/watchdog.sh --once      # 单次看护检查
 bash scripts/watchdog.sh --install   # 装成定时任务（launchd/systemd timer）
 bash scripts/patch-ui.sh status      # 查看可选补丁状态
 bash scripts/patch-ui.sh apply       # 打补丁（自动备份、可 revert）
+bash scripts/patch-post-image.sh status   # 查看图文混排修复状态
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 
