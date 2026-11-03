@@ -112,6 +112,10 @@ bash scripts/diagnose.sh --json      # 机器可读
 bash scripts/ws.sh list              # 多工作区配置
 bash scripts/upgrade.sh              # 平滑升级
 bash scripts/logs.sh errors          # 错误聚合
+bash scripts/logs.sh tail 30 --quiet # 过滤已知噪音后查看
+bash scripts/perf.sh                 # 流畅度与性能报告
+bash scripts/watchdog.sh --once      # 单次看护检查
+bash scripts/watchdog.sh --install   # 装成定时任务（launchd/systemd timer）
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 

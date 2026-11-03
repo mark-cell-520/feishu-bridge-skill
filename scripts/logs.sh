@@ -7,11 +7,21 @@
 #
 # 能力：
 #   logs.sh tail [N]        末尾 N 行（默认 30）
+#   logs.sh tail --quiet    末尾 N 行，过滤已知噪音（见下）
 #   logs.sh follow          实时跟随（Ctrl-C 退出）
+#   logs.sh follow --quiet  实时跟随，过滤已知噪音
 #   logs.sh errors [N]      只看 ERROR/CRITICAL/WARNING，按内容聚合计数
 #   logs.sh rotate          轮换：.log → .log.1（覆盖式，只留一代）
 #   logs.sh size            各日志文件大小与年龄
 #   logs.sh clean           清空（轮换后确认无用再这么做）
+#
+# 关于 --quiet 过滤的"已知噪音"：
+#   agent_status 元素的 markdown 字段被飞书 API 以 code=99992402 拒绝，
+#   导致该元素每次更新都失败并记一行 WARNING。本机实测 7056 行日志里
+#   5077 行是这个，占 72%。它不携带新信息（同一个错重复四千次），
+#   但会把真正有用的 Deliver / Claude 记录挤到几十行之外，tail 看不到重点。
+#   过滤掉它不是掩盖问题——perf.sh 会统计它的总量与趋势，根因记录在
+#   references/platforms.md。要看不过滤的原始日志，去掉 --quiet 即可。
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,6 +31,24 @@ platform::init
 STDLOG="$LOG_DIR/bridge.log"
 ERRLOG="$LOG_DIR/bridge.err.log"
 N="${2:-30}"
+QUIET=0
+for a in "$@"; do
+    case "$a" in
+        --quiet|-q) QUIET=1 ;;
+        [0-9]*) N="$a" ;;
+    esac
+done
+
+# 已知噪音：同一个元素校验错误无限重复，无信息量
+NOISE_RE='Element update failed \((agent_status|streaming_output)\): code=(99992402|300309|200850|300317)'
+
+filter_noise() {
+    if [ "$QUIET" = "1" ]; then
+        grep -Ev "$NOISE_RE"
+    else
+        cat
+    fi
+}
 
 die() { platform::err "$*"; exit 1; }
 
@@ -37,16 +65,16 @@ warn_if_missing
 
 case "$CMD" in
     tail)
-        echo "=== $ERRLOG 末尾 $N 行 ==="
-        [ -f "$ERRLOG" ] && tail -"$N" "$ERRLOG"
+        echo "=== $ERRLOG 末尾 $N 行 $([ "$QUIET" = "1" ] && echo '（已过滤已知噪音）') ==="
+        [ -f "$ERRLOG" ] && tail -"$N" "$ERRLOG" | filter_noise
         echo
         echo "=== $STDLOG 末尾 $N 行 ==="
         [ -f "$STDLOG" ] && tail -"$N" "$STDLOG"
         ;;
     follow)
         # 两个日志一起跟，用标签区分来源
-        echo "跟随中（Ctrl-C 退出）..."
-        tail -f "$ERRLOG" "$STDLOG" 2>/dev/null
+        echo "跟随中（Ctrl-C 退出）$([ "$QUIET" = "1" ] && echo '（已过滤已知噪音）')..."
+        tail -f "$ERRLOG" "$STDLOG" 2>/dev/null | filter_noise
         ;;
     errors)
         # 聚合计数：刷屏的同一条错只显示一次并给出次数，

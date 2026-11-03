@@ -26,7 +26,11 @@ It provides:
 - One-shot diagnostics (`diagnose.sh`, human or `--json`) — platform, service, config, permissions, log health, Feishu API reachability, control socket, media dirs
 - Multi-workspace / multi-environment profiles (`ws.sh`)
 - Safe upgrade (`upgrade.sh`) that re-applies the permission patch pip would revert
-- Log tooling (`logs.sh`) with error aggregation — a single repeated warning shows once with a count
+- Watchdog (`watchdog.sh`): three-layer health check (process / control socket /
+  log freshness) that catches the "alive but not serving" state KeepAlive cannot see,
+  with a cooldown to prevent restart storms
+- Fluency & performance metrics (`perf.sh`): end-to-end latency percentiles,
+  streaming-card failure rate, log noise ratio (`logs.sh`) with error aggregation — a single repeated warning shows once with a count
 - Cross-platform delivery (`send.py` core + `send.sh` / `send.ps1`)
 - Feishu app configuration (CLI wizard, secret not echoed)
 - Health monitoring via the bridge's own control socket — real session count and

@@ -207,6 +207,36 @@ v2.0.0 的处理是在 JSON 输出里加 `platform` 与 `initManager` 字段，�
 消费方据此可以区分三种状态：`control-socket`（真实探到）、
 `state-file-fallback`（退化到数状态文件）、`unsupported-platform`（能力缺失）。
 
+## 六之二、流畅度：实测数据与根因
+
+用 `scripts/perf.sh` 对本机日志（7056 行）做的度量，结论比体感准确：
+
+流式卡片更新几乎完全失效：
+
+| 元素 | 失败次数 | 主要错误码 |
+|---|---|---|
+| agent_status | 4096 | 99992402（3208 次）、300309（886 次） |
+| streaming_output | 981 | 300309（960 次）、200850（14 次） |
+
+合计 5077 次失败，占全部日志行的 **72.0%**。停滞告警 518 次。
+
+99992402 的 msg 是 `field validation failed`：agent_status 在 ui.py 里是
+`{"tag": "markdown", "element_id": "agent_status", "content": ""}`，
+飞书 API 拒绝了这个字段组合。结果是在飞书侧看不到逐步进度，
+只能等最终结果一次性出现——这就是"对话不流畅"的直接原因。
+
+根因在桥接包的 ui.py，改它会被下次 pip 升级覆盖，所以技能层的取舍是：
+度量并报告（perf.sh），而不是改包。logs.sh 的 `--quiet` 会把这 72% 的
+重复噪音滤掉，让 tail 重新能看到 Deliver / Claude 记录；过滤不等于掩盖，
+perf.sh 始终统计它的总量与趋势。
+
+顺带在 bridge.log 里发现的稳定性证据：11-02 08:10:53 出现过
+`receive message loop exit, err: sent 1011 (internal error) keepalive ping
+timeout; no close frame received`，WebSocket 因 keepalive 超时断开，
+08:11:05 自动重连成功。自动重连兜住了这一次，但重连失败就会长时间不可用，
+而 launchd 的 KeepAlive 看不见这种"进程活着但不服务"——这正是
+watchdog.sh 存在的原因。
+
 ## 七、验证边界（重要）
 
 本次改造在 macOS 27 + Python 3.14 + feishu-bridge 2026.6.20.12 上实跑验证了
