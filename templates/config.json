@@ -1,16 +1,17 @@
 {
+  "_comment": "模板文件。占位符 ${FEISHU_APP_ID} 由桥接展开，但 $HOME 不会被展开——安装脚本 scripts/install.sh 会生成展开后的真实配置，不要直接复制本文件使用。",
   "bots": [
     {
       "name": "claude-code",
       "app_id": "${FEISHU_APP_ID}",
       "app_secret": "${FEISHU_APP_SECRET}",
-      "workspace": "$HOME/.local/share/feishu-bridge/workspaces/claude-code",
+      "workspace": "<安装时由 install.sh 填入展开后的绝对路径>",
       "allowed_users": ["*"]
     }
   ],
   "agent": {
     "type": "claude",
-    "command": "$HOME/.npm-global/bin/claude",
+    "command": "<安装时由 install.sh 填入 claude 的绝对路径>",
     "timeout_seconds": 300,
     "args": ["--permission-mode", "bypassPermissions"]
   }

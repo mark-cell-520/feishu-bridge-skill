@@ -14,3 +14,5 @@ logs/
 workspaces/*/state/
 __pycache__/
 *.pyc
+*.bak
+*.tmp-patch

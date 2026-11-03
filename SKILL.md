@@ -12,8 +12,8 @@ whenToUse: >
   典型触发词：桥接没反应、机器人不回、launchd/systemd 起不来、
   Unresolved env vars、权限改了不生效、日志 tail 不到、发文件到飞书。
 metadata:
-  version: "2.0.0"
-  supersedes: "1.1.0（2026-10-13，提交 9380955）"
+  version: "2.20.0"
+  supersedes: "1.1.0（2026-10-13，提交 9380955）；2.0.0 至 2.19.0 见 git log"
   verifiedOn: "2026-11-03"
   verifiedEnv: "macOS 27 / Python 3.14 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge（实测）；Linux systemd --user 与 Windows 为静态适配，未在对应平台实跑"
   author: "yun520-1"
@@ -36,7 +36,7 @@ metadata:
 |---|---|
 | launchd 标签 | `com.feishu.bridge` |
 | plist 入口 | `/bin/bash` + `~/.local/share/feishu-bridge/start-bridge.sh`（包装器） |
-| venv | `~/.venv-feishu-bridge`，Python **3.11.15** |
+| venv | `~/.venv-feishu-bridge`，Python **3.11.17** |
 | 包版本 | `feishu_bridge-2026.6.20.12` |
 | 日志 | `logs/bridge.log`（stdout）、`logs/bridge.err.log`（stderr） |
 | 配置 | `~/.config/feishu-bridge/{.env,config.json}` |
@@ -122,6 +122,10 @@ bash scripts/patch-post-image.sh status   # 查看图文混排修复状态
 bash scripts/patch-tool-list.sh status    # 工具进度编号化（已启用，2026-11-03 重新应用）
 bash scripts/restart-bridge.sh            # 一键重启 + 补丁生效检查
 bash scripts/setup-format-rule.sh status  # 查看输出规则注入状态
+bash scripts/send.sh chat                # 解析当前会话 chat_id
+bash scripts/send.sh text "消息"         # 投递文本到当前会话
+bash scripts/send.sh image ~/pic.png     # 投递图片（≤10MB）
+bash scripts/send.sh file  ~/report.pdf  # 投递文件（≤30MB）
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 
