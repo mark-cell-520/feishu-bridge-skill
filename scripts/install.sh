@@ -6,9 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib/platform.sh"
 platform::init
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
-BRIDGE_DIR="$HOME/.local/share/feishu-bridge"
-CONFIG_DIR="$HOME/.config/feishu-bridge"
-VENV_DIR="$HOME/.venv-feishu-bridge"
+BRIDGE_DIR="${FEISHU_BRIDGE_HOME:-$HOME/.local/share/feishu-bridge}"
+CONFIG_DIR="${FEISHU_BRIDGE_CONFIG_HOME:-$HOME/.config/feishu-bridge}"
+VENV_DIR="${FEISHU_BRIDGE_VENV:-$HOME/.venv-feishu-bridge}"
 LOG_DIR="$BRIDGE_DIR/logs"
 WRAPPER="$BRIDGE_DIR/start-bridge.sh"
 
@@ -126,7 +126,13 @@ echo "  4. 查看日志: tail -f $LOG_DIR/bridge.err.log"
 echo ""
 echo "⚠️ 若要改权限（默认 bypassPermissions，deny 为空）："
 echo "   改包内那一份，不要改部署副本——"
-SP_DIR="$("$PLATFORM_PYTHON" -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])' 2>/dev/null || echo "$VENV_DIR/lib/python3.11/site-packages")"
+# 兜底路径不写死 python3.11：不同机器的 venv 可能是 3.10 / 3.12 / 3.13，
+# 写死版本号在别的机器上必然指错位置。探测失败时改用 glob 找。
+SP_DIR="$("$PLATFORM_PYTHON" -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])' 2>/dev/null || true)"
+if [ -z "$SP_DIR" ]; then
+    SP_DIR="$(ls -d "$VENV_DIR"/lib/python*/site-packages 2>/dev/null | head -1)"
+fi
+[ -n "$SP_DIR" ] || SP_DIR="$VENV_DIR/lib/python3.11/site-packages（未探测到，仅供参考）"
 echo "   $SP_DIR/feishu_bridge/data/bridge-settings.json"
 echo "   部署副本 ~/.feishu-bridge/bridge-settings.json 每次启动都会被无条件覆盖。"
 echo ""

@@ -12,10 +12,30 @@
 #   这个不对称没有任何文档说明，是排障时踩出来的。
 #
 # 安装位置：~/.local/share/feishu-bridge/start-bridge.sh（由 install.sh 复制）
+# 路径支持环境变量覆盖（多环境：dev/prod、多 bot 隔离），
+# 与 lib/platform.sh 用同一套变量名，避免两处口径不一致。
+: "${FEISHU_BRIDGE_CONFIG_HOME:=$HOME/.config/feishu-bridge}"
+: "${FEISHU_BRIDGE_VENV:=$HOME/.venv-feishu-bridge}"
+: "${FEISHU_BRIDGE_BOT:=claude-code}"
+
+# venv 可执行目录：POSIX 是 bin，Windows 是 Scripts。
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*|Windows_NT) VENV_BIN="Scripts" ;;
+    *)                               VENV_BIN="bin" ;;
+esac
+
+BIN="$FEISHU_BRIDGE_VENV/$VENV_BIN/feishu-bridge"
+[ -x "$BIN" ] || {
+    echo "错误: 找不到 feishu-bridge 可执行文件: $BIN" >&2
+    echo "      先运行 bash scripts/install.sh" >&2
+    exit 1
+}
+
 set -a
-[ -f "$HOME/.config/feishu-bridge/.env" ] && . "$HOME/.config/feishu-bridge/.env"
+[ -f "$FEISHU_BRIDGE_CONFIG_HOME/.env" ] && . "$FEISHU_BRIDGE_CONFIG_HOME/.env"
 set +a
-exec "$HOME/.venv-feishu-bridge/bin/feishu-bridge" \
-  --config "$HOME/.config/feishu-bridge/config.json" \
-  --bot claude-code \
+
+exec "$BIN" \
+  --config "$FEISHU_BRIDGE_CONFIG_HOME/config.json" \
+  --bot "$FEISHU_BRIDGE_BOT" \
   --log-level INFO

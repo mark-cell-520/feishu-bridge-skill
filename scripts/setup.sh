@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib/platform.sh"
 platform::init
 
-CONFIG_DIR="$HOME/.config/feishu-bridge"
-VENV_DIR="$HOME/.venv-feishu-bridge"
+CONFIG_DIR="${FEISHU_BRIDGE_CONFIG_HOME:-$HOME/.config/feishu-bridge}"
+VENV_DIR="${FEISHU_BRIDGE_VENV:-$HOME/.venv-feishu-bridge}"
 
 echo "========================================="
 echo "  Feishu Bridge 配置向导"
