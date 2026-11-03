@@ -5,7 +5,7 @@ install, configure, start, stop, status, and health monitoring.
 
 [中文](README.zh.md) | English
 
-> v2.22.1 (2026-11-03) — current.
+> v2.22.2 (2026-11-03) — current.
 >
 > History: v1.0.0 contained hardcoded `/Users/apple/...` paths, wrong log
 > filenames (`bridge-stdout.log` / `bridge-stderr.log`), a wrong launchd label
