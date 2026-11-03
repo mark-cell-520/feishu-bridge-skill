@@ -29,7 +29,21 @@ add() { RESULTS="${RESULTS}${1}|${2}|${3}"$'\n'; }
 # ── 1. 平台能力 ─────────────────────────────────────────────────
 if [ -n "$PLATFORM_PYTHON" ]; then
     PYV="$("$PLATFORM_PYTHON" -c 'import sys;print("%d.%d.%d"%sys.version_info[:3])' 2>/dev/null || echo '?')"
-    add "platform" "ok" "$PLATFORM_OS / $PLATFORM_INIT / $PLATFORM_PYTHON ($PYV)"
+    # 探测到的 python 未必是桥接实际用的那个。wrapper 会优先选 app bundle
+    # 里的固化解释器（FDA 授权挂在那条路径上），PATH 里的 python3 只是
+    # 本脚本自己用的。两个版本可能差很远，报成同一个数会让人以为桥接
+    # 跑在这个版本上——本机实测：脚本侧 3.14.8，桥接侧 3.11.17。
+    BRIDGE_PY="服务未运行，无法确认"
+    SVC_PID="$(platform::service_status 2>/dev/null | awk '{print $1}')"
+    if [ -n "$SVC_PID" ]; then
+        REAL_PY="$(ps -o command= -p "$SVC_PID" 2>/dev/null | awk '{print $1}')"
+        if [ -n "$REAL_PY" ] && [ -x "$REAL_PY" ]; then
+            RPV="$("$REAL_PY" -c 'import sys;print("%d.%d.%d"%sys.version_info[:3])' 2>/dev/null || echo '?')"
+            BRIDGE_PY="$REAL_PY ($RPV)"
+        fi
+    fi
+    add "platform" "ok" \
+        "$PLATFORM_OS / $PLATFORM_INIT / 脚本用 $PLATFORM_PYTHON ($PYV) / 桥接用 $BRIDGE_PY"
 else
     add "platform" "fail" "$PLATFORM_OS / $PLATFORM_INIT / Python 未找到"
 fi
@@ -105,7 +119,9 @@ if [ -f "$ERRLOG" ]; then
         else
             add "err_log" "warn" "${SZ} 字节，已 ${AGE}s 无写入（服务可能空转）"
         fi
-        # 最近错误的分类统计，比直接 tail 更能看出是不是同一个错在刷屏
+        # 最近错误的分类统计，比直接 tail 更能看出是不是同一个错在刷屏。
+        # 注意这是"日志文件自创建起"的累计值，不是本次进程启动后的增量——
+        # 补丁是否生效要看增量，累计值只能看历史包袱有多重。
         TOP="$("$PLATFORM_PYTHON" - "$ERRLOG" <<'PY' 2>/dev/null
 import re, sys, collections
 pat = re.compile(r"(ERROR|WARNING|CRITICAL)\s+(.{0,80})")

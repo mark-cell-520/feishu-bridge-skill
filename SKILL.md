@@ -12,8 +12,8 @@ whenToUse: >
   典型触发词：桥接没反应、机器人不回、launchd/systemd 起不来、
   Unresolved env vars、权限改了不生效、日志 tail 不到、发文件到飞书。
 metadata:
-  version: "2.22.0"
-  supersedes: "1.1.0（2026-10-13，提交 9380955）；2.0.0 至 2.21.0 见 git log"
+  version: "2.22.1"
+  supersedes: "1.1.0（2026-10-13，提交 9380955）；2.0.0 至 2.22.0 见 git log"
   verifiedOn: "2026-11-03"
   verifiedEnv: "macOS 27 / Python 3.11.17 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge（实测）；Linux systemd --user 与 Windows 为静态适配，未在对应平台实跑"
   author: "yun520-1"
@@ -25,7 +25,7 @@ metadata:
 ---
 # 飞书桥接服务（Feishu Bridge）管理技能
 
-> **v2.22.0** — 2026-11-03 当前版本。
+> **v2.22.1** — 2026-11-03 当前版本。
 >
 > 历史：v1.0.0 里 `/Users/apple/` 的绝对路径、`bridge-stdout.log` 的日志名、
 > `com.heartflow.mcp` 的 launchd 标签、以及整条 HeartFlow 判别门禁，
