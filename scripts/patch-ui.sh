@@ -81,7 +81,7 @@ case "${1:-status}" in
 
         # 用 Python 做精确插入，避免 sed 对多行 Python 的脆弱匹配
         "$PLATFORM_PYTHON" - "$UI" "$MARKER" <<'PY'
-import sys, re
+import os, sys, re
 path, marker = sys.argv[1], sys.argv[2]
 src = open(path, encoding="utf-8").read()
 # 定位 _render_agent_progress 的 docstring 结束处，在函数体第一行前插入早退
@@ -104,7 +104,10 @@ patch = (
     + "        # 删除本行及上方三行注释即可恢复，或运行 patch-ui.sh revert。\n"
     + "        return\n"
 )
-open(path, "w", encoding="utf-8").write(src[:m.start()] + patch + src[m.end():])
+tmp = path + ".tmp-patch"
+with open(tmp, "w", encoding="utf-8") as fh:
+    fh.write(src[:m.start()] + patch + src[m.end():])
+os.replace(tmp, path)  # 原子替换，避免半成品文件
 print("✅ 补丁已写入")
 PY
         [ $? -eq 0 ] || { platform::err "补丁写入失败，从备份恢复"; cp -p "$BAK" "$UI"; exit 1; }
