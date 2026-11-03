@@ -119,6 +119,28 @@ else:
 PY
 fi
 
+# ── 4. ui.py 补丁检测（pip 升级会覆盖它）──────────────────────
+step "3.5/5 检测 ui.py 补丁"
+if [ -f "$SCRIPT_DIR/patch-ui.sh" ]; then
+    PATCH_STATE="$(bash "$SCRIPT_DIR/patch-ui.sh" status 2>/dev/null | grep '补丁状态:' | awk '{print $2}')"
+    if [ "$PATCH_STATE" = "已打" ]; then
+        echo "✅ ui.py 补丁仍在（升级未覆盖，或尚未被覆盖）"
+    else
+        # 补丁不见了：要么从没打过，要么被本次 pip 升级覆盖了。
+        # 有备份但 marker 不在，就是被覆盖，需要重打。
+        if ls "$STATE_HOME/patches/ui.py.pre-patch-"* >/dev/null 2>&1; then
+            echo "⚠️ 曾经打过 ui.py 补丁，但本次升级已将其覆盖"
+            echo "   重打: bash scripts/patch-ui.sh apply"
+            echo "   备份仍在: $STATE_HOME/patches/"
+        else
+            echo "ℹ️ 未打过 ui.py 补丁（可选：禁用一个持续失败的卡片元素）"
+            echo "   详见: bash scripts/patch-ui.sh status"
+        fi
+    fi
+else
+    echo "ℹ️ 本版本无 patch-ui.sh，跳过"
+fi
+
 # ── 4. 重启服务 ─────────────────────────────────────────────────
 step "4/5 重启服务"
 if [ "$NO_RESTART" = "1" ]; then

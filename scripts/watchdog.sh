@@ -99,19 +99,22 @@ PY
         fi
     fi
 
-    # 第三层：错误日志新鲜度（超过 3 倍间隔没写入视为僵住）
-    # 注意：空闲时日志本来就不写，所以这一层只在"曾经写过"的前提下判，
-    # 且阈值放宽到 3 倍间隔，避免把正常闲置误判成僵死。
+    # 第三层：错误日志新鲜度——只报告，不作为重启依据。
+    #
+    # 为什么不能拿来重启：空闲时日志本来就不写，而"没人发消息"和
+    # "服务坏了"在日志层面无法区分。实测本机对话间隔经常超过 3 分钟
+    # （如 09:41 → 09:51），若按"3 倍间隔无写入即僵住"判，每次较长
+    # 空闲后都会误重启。重启的代价是杀掉父进程、当前会话中断，
+    # 这个风险不能靠调阈值消除，只能改判定依据。
+    #
+    # 真正的"僵住"由第二层兜住：进程在但套接字不应答。
+    IDLE_NOTE=""
     if [ -f "$LOG_DIR/bridge.err.log" ]; then
         MT="$(platform::stat_mtime "$LOG_DIR/bridge.err.log" || echo '')"
         if [ -n "$MT" ]; then
             AGE=$(( $(date +%s) - MT ))
-            STALE_LIMIT=$(( INTERVAL * 3 ))
-            if [ "$AGE" -gt "$STALE_LIMIT" ]; then
-                # 再确认一次服务是否真的在跑，避免误判
-                if [ -n "$(platform::service_status)" ]; then
-                    return 3
-                fi
+            if [ "$AGE" -gt "$(( INTERVAL * 3 ))" ]; then
+                IDLE_NOTE="错误日志已 ${AGE}s 无写入（可能只是空闲，未判为故障）"
             fi
         fi
     fi
