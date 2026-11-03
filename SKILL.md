@@ -12,10 +12,10 @@ whenToUse: >
   典型触发词：桥接没反应、机器人不回、launchd/systemd 起不来、
   Unresolved env vars、权限改了不生效、日志 tail 不到、发文件到飞书。
 metadata:
-  version: "2.20.0"
-  supersedes: "1.1.0（2026-10-13，提交 9380955）；2.0.0 至 2.19.0 见 git log"
+  version: "2.21.0"
+  supersedes: "1.1.0（2026-10-13，提交 9380955）；2.0.0 至 2.20.1 见 git log"
   verifiedOn: "2026-11-03"
-  verifiedEnv: "macOS 27 / Python 3.14 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge（实测）；Linux systemd --user 与 Windows 为静态适配，未在对应平台实跑"
+  verifiedEnv: "macOS 27 / Python 3.11.17 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge（实测）；Linux systemd --user 与 Windows 为静态适配，未在对应平台实跑"
   author: "yun520-1"
   platform: "feishu"
   category: "integration"
@@ -25,12 +25,16 @@ metadata:
 ---
 # 飞书桥接服务（Feishu Bridge）管理技能
 
-> **v1.1.0** — 2026-10-13 对着一台在跑的实例逐条核对后重写。
-> 1.0.0 里 `/Users/apple/` 的绝对路径、`bridge-stdout.log` 的日志名、
+> **v2.21.0** — 2026-11-03 当前版本。
+>
+> 历史：v1.0.0 里 `/Users/apple/` 的绝对路径、`bridge-stdout.log` 的日志名、
 > `com.heartflow.mcp` 的 launchd 标签、以及整条 HeartFlow 判别门禁，
-> 都与实况不符，已全部修正。差异清单见文末。
+> 都与实况不符。v1.1.0（2026-10-13）对着一台在跑的实例逐条核对后重写，
+> 把这些问题全部修正。v2.0.0 起做跨平台改造，并陆续加入一键诊断、服务看护、
+> 流畅度度量、平滑升级，以及对 `ui.py` / `main.py` 的三个补丁。
+> 差异清单见文末「1.0.0 → 1.1.0 改了什么」（历史记录），完整历史见 `git log`。
 
-## 本机实况速查（2026-10-13 实测）
+## 本机实况速查（2026-10-13 实测，2026-11-03 复校版本号与 Python 版本）
 
 | 项 | 值 |
 |---|---|
@@ -207,12 +211,14 @@ tail -f ~/.local/share/feishu-bridge/logs/bridge.log       # stdout
 
 ## 版本
 
-- **技能版本**: 1.1.0（2026-10-13）
+- **技能版本**: 2.21.0（2026-11-03）
 - **运行时**: feishu-bridge 2026.6.20.12
-- **Python**: 3.11.15 实测可跑（1.0.0 写 3.14+，与实况不符）
+- **Python**: 3.11.17 实测可跑（1.0.0 写 3.14+，与实况不符）
 - **HeartFlow 门禁**: 未启用，见 references/architecture.md
 
-## 1.0.0 → 1.1.0 改了什么
+## 1.0.0 → 1.1.0 改了什么（2026-10-13 的历史记录）
+
+v2.0.0 之后的变更未逐条列在此表，看 `git log`。
 
 | # | 1.0.0 的问题 | 1.1.0 的处理 |
 |---|---|---|

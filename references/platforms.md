@@ -239,7 +239,7 @@ watchdog.sh 存在的原因。
 
 ## 七、验证边界（重要）
 
-本次改造在 macOS 27 + Python 3.14 + feishu-bridge 2026.6.20.12 上实跑验证了
+本次改造在 macOS 27 + Python 3.11.17 + feishu-bridge 2026.6.20.12 上实跑验证了
 `platform.sh` 的能力探测、`status.sh`、`health-check.sh`（含 mtime 跨平台取法）、
 `send.py` / `send.sh` 的退出码语义与 CLI 定位。
 

@@ -1,6 +1,7 @@
 # 故障排查
 
-按"本机实测过"排序，不是按常见度猜的。2026-10-13 核对。
+按"本机实测过"排序，不是按常见度猜的。2026-10-13 首版核对，2026-11-03 复校：
+第 9 条已从"要改上游代码"更新为指向现成的 `patch-ui.sh` 补丁。
 
 ## 0. 先跑这两个，别凭猜
 
@@ -131,7 +132,19 @@ wc -l ~/.local/share/feishu-bridge/workspaces/claude-code/state/feishu-bridge/*.
 是 CardKit 元素更新被飞书拒。本机 2026-10-13 实测：连续 10 次后桥接自己会打
 `streaming/agent_status may be stalled` 警告。不影响消息正文投递，
 但状态栏不更新。这是飞书侧 schema 与桥接发的字段不匹配，
-需要改 `feishu_bridge` 里构造 agent_status 元素的代码，不是配置问题。
+不是配置问题。
+
+已定位到 `feishu_bridge/ui.py` 的 `_render_agent_progress`，并有现成补丁：
+
+```bash
+bash scripts/patch-ui.sh status   # 看是否已打
+bash scripts/patch-ui.sh apply    # 打上（自动备份、可 revert）
+bash scripts/restart-bridge.sh    # 重启生效
+```
+
+打之前先想清楚：这个元素每次更新都被拒，卡片上那个位置本来就是空的，
+所以禁掉的是注定失败的请求，不是能用的功能；真正承载回复正文的
+`streaming_output` 不走这个函数。补丁会被 pip 升级覆盖，`upgrade.sh` 会提醒重打。
 
 ## 日志位置
 

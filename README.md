@@ -5,12 +5,16 @@ install, configure, start, stop, status, and health monitoring.
 
 [中文](README.zh.md) | English
 
-> v1.1.0 (2026-10-13) — rewritten after line-by-line verification against a live
-> instance. v1.0.0 contained hardcoded `/Users/apple/...` paths, wrong log
+> v2.21.0 (2026-11-03) — current.
+>
+> History: v1.0.0 contained hardcoded `/Users/apple/...` paths, wrong log
 > filenames (`bridge-stdout.log` / `bridge-stderr.log`), a wrong launchd label
 > (`com.heartflow.mcp`), and an entire HeartFlow discrimination-gate feature
-> that is not wired up on this machine. Full changelog at the end of
-> [SKILL.md](SKILL.md).
+> that is not wired up on this machine. v1.1.0 (2026-10-13) rewrote the skill
+> line-by-line against a live instance and fixed all of it. v2.0.0 onward made
+> the whole thing cross-platform and added diagnostics, a watchdog, perf
+> metrics, a safe upgrade path, and the `ui.py` / `main.py` patches.
+> Full history: `git log`.
 
 ## Overview
 
@@ -48,10 +52,22 @@ bash scripts/install.sh
 ```bash
 bash scripts/install.sh              # one-command install
 bash scripts/setup.sh                # reconfigure (switch app)
-bash scripts/start-bridge.sh         # start (writes plist and loads it)
+bash scripts/start-bridge.sh         # start (writes plist / unit and loads it)
 bash scripts/stop-bridge.sh          # stop
 bash scripts/status.sh               # human-readable status
 bash scripts/health-check.sh         # JSON health check
+bash scripts/diagnose.sh             # one-shot diagnostics report
+bash scripts/restart-bridge.sh       # restart + verify patches took effect
+bash scripts/ws.sh list              # multi-workspace profiles
+bash scripts/upgrade.sh              # smooth upgrade (re-applies patches)
+bash scripts/logs.sh errors          # error aggregation
+bash scripts/perf.sh                 # fluency & performance report
+bash scripts/watchdog.sh --once      # single health check
+bash scripts/patch-ui.sh status      # optional patch status
+bash scripts/patch-post-image.sh status   # image-in-post fix status
+bash scripts/patch-tool-list.sh status    # numbered tool list status
+bash scripts/setup-format-rule.sh status  # output format rule injection status
+bash scripts/send.sh text "message" # deliver to the current Feishu chat
 ```
 
 ## Features
@@ -60,22 +76,27 @@ bash scripts/health-check.sh         # JSON health check
 - ✅ Auto-reconnect + message dedup + per-chat serial queue
 - ✅ Real health probe: Unix-socket control API, not a dead HTTP port
 - ✅ Log names, launchd label, and paths all verified against a live install
+- ✅ Cross-platform service units: launchd (macOS), systemd --user (Linux),
+  foreground / Task Scheduler (Windows)
+- ✅ Patches for three upstream defects that cannot be configured away
+  (see SKILL.md), each with automatic backup and revert
 
-## Verified Environment (2026-10-13)
+## Verified Environment (2026-11-03)
 
 | Item | Value |
 |---|---|
 | launchd label | `com.feishu.bridge` |
-| Python | 3.11.15 |
+| Python | 3.11.17 |
 | Runtime | feishu-bridge 2026.6.20.12 |
 | Logs | `logs/bridge.log`, `logs/bridge.err.log` |
 | Discrimination gate | not enabled |
 | MCP | not configured |
+| Platforms | macOS 27 verified live; Linux / Windows adapted, not run on-device |
 
 ## Requirements
 
-- macOS (launchd)
-- Python 3.11+ (3.11.15 verified; the 3.14+ in v1.0.0 was wrong and has been dropped)
+- macOS (launchd), Linux (systemd --user), or Windows (foreground / Task Scheduler)
+- Python 3.11+ (3.11.17 verified; the 3.14+ in v1.0.0 was wrong and has been dropped)
 - A Feishu app (App ID + App Secret)
 - `node` only if you build your own MCP tools — the bridge itself does not need it
 
@@ -86,6 +107,7 @@ bash scripts/health-check.sh         # JSON health check
 - [Configuration](references/config.md)
 - [Troubleshooting](references/troubleshooting.md)
 - [Architecture](references/architecture.md)
+- [Platforms & environments](references/platforms.md)
 
 ## License
 

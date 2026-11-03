@@ -6,6 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib/platform.sh"
 platform::init
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+# 版本号从 SKILL.md frontmatter 派生，不再写死。
+# 写死的那行会一直停在它被写下的那个版本，装的时候显示一个假版本号。
+SKILL_VER="$(sed -n 's/^[[:space:]]*version:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    "$SKILL_DIR/SKILL.md" 2>/dev/null | head -1)"
+[ -n "$SKILL_VER" ] || SKILL_VER="未知"
 BRIDGE_DIR="${FEISHU_BRIDGE_HOME:-$HOME/.local/share/feishu-bridge}"
 CONFIG_DIR="${FEISHU_BRIDGE_CONFIG_HOME:-$HOME/.config/feishu-bridge}"
 VENV_DIR="${FEISHU_BRIDGE_VENV:-$HOME/.venv-feishu-bridge}"
@@ -13,7 +18,7 @@ LOG_DIR="$BRIDGE_DIR/logs"
 WRAPPER="$BRIDGE_DIR/start-bridge.sh"
 
 echo "========================================="
-echo "  Feishu Bridge 一键安装 v1.1.0"
+echo "  Feishu Bridge 一键安装 v$SKILL_VER"
 echo "========================================="
 echo ""
 
