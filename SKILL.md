@@ -121,6 +121,7 @@ bash scripts/patch-ui.sh apply       # 打补丁（自动备份、可 revert）
 bash scripts/patch-post-image.sh status   # 查看图文混排修复状态
 bash scripts/patch-tool-list.sh status    # 查看工具列表编号化状态
 bash scripts/restart-bridge.sh            # 一键重启 + 补丁生效检查
+bash scripts/setup-format-rule.sh status  # 查看输出规则注入状态
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 
