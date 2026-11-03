@@ -2,25 +2,27 @@
 name: feishu-bridge
 description: >
   飞书 ↔ Claude Code 桥接服务管理技能。一键安装、配置、启动、停止、状态检查、
-  健康监控。健康检查走桥接自带的管理套接字，能拿到真实会话数与队列深度，
-  不是探一个不存在的 HTTP 端口。
+  健康监控，覆盖 macOS / Linux / Windows。健康检查走桥接自带的管理套接字，
+  能拿到真实会话数与队列深度，不是探一个不存在的 HTTP 端口。
+  另含跨平台投递能力（send.py / send.sh / send.ps1）把文本、文件、图片发到飞书。
 whenToUse: >
   当用户需要管理飞书桥接服务时使用：安装/启动/停止/重启/查看状态/更新/卸载。
   当用户需要配置飞书应用、检查桥接健康、或排查飞书消息收发故障时使用。
-  典型触发词：桥接没反应、机器人不回、launchd 起不来、Unresolved env vars、
-  权限改了不生效、日志 tail 不到东西。
+  当用户要把文件、图片、文本投递到飞书时使用。
+  典型触发词：桥接没反应、机器人不回、launchd/systemd 起不来、
+  Unresolved env vars、权限改了不生效、日志 tail 不到、发文件到飞书。
 metadata:
-  version: "1.1.0"
-  supersedes: "1.0.0（2026-09-18，提交 477d2090）"
-  verifiedOn: "2026-10-13"
-  verifiedEnv: "macOS / Python 3.11.15 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge"
+  version: "2.0.0"
+  supersedes: "1.1.0（2026-10-13，提交 9380955）"
+  verifiedOn: "2026-11-03"
+  verifiedEnv: "macOS 27 / Python 3.14 / feishu-bridge 2026.6.20.12 / launchd com.feishu.bridge（实测）；Linux systemd --user 与 Windows 为静态适配，未在对应平台实跑"
   author: "yun520-1"
   platform: "feishu"
   category: "integration"
   runtime: "feishu-bridge"
   runtimeVersion: "2026.6.20.12"
+  crossPlatform: "macOS (launchd) / Linux (systemd --user) / Windows (前台或计划任务)"
 ---
-
 # 飞书桥接服务（Feishu Bridge）管理技能
 
 > **v1.1.0** — 2026-10-13 对着一台在跑的实例逐条核对后重写。
@@ -64,19 +66,26 @@ bash scripts/install.sh
 feishu-bridge-skill/
 ├── SKILL.md                    # 本文档
 ├── scripts/
+│   ├── lib/
+│   │   └── platform.sh         # 跨平台能力抽象层（探测 OS/服务管理器/Python/venv 布局）
 │   ├── install.sh              # 一键安装 + 配置 + 启动
 │   ├── setup.sh                # 交互式配置（换应用 / 迁移凭证）
-│   ├── start-bridge.sh         # 生成 plist 并启动
-│   ├── start-bridge-wrapper.sh # 包装器：source .env 后 exec 二进制（plist 的真正入口）
+│   ├── start-bridge.sh         # 生成服务单元并启动（plist 或 systemd unit）
+│   ├── start-bridge-wrapper.sh # 包装器：source .env 后 exec 二进制（服务的真正入口）
 │   ├── stop-bridge.sh          # 停止服务
 │   ├── status.sh               # 服务状态检查
-│   └── health-check.sh         # 健康检查（走控制套接字，输出 JSON）
+│   ├── health-check.sh         # 健康检查（走控制套接字，输出 JSON）
+│   ├── send.py                 # 投递跨平台核心（text/file/image/chat）
+│   ├── send.sh                 # 投递入口：macOS / Linux
+│   └── send.ps1                # 投递入口：Windows
 ├── references/
-│   ├── config.md               # 配置参考（.env / config.json / plist / 权限 / 套接字）
+│   ├── config.md               # 配置参考（.env / config.json / 服务单元 / 权限 / 套接字）
 │   ├── troubleshooting.md      # 故障排查（按实测排序）
-│   └── architecture.md         # 架构说明
+│   ├── architecture.md         # 架构说明
+│   └── platforms.md            # 跨平台与多环境适配指南
 ├── templates/
-│   └── config.json             # 配置模板
+│   ├── config.json             # 配置模板
+│   └── feishu-bridge.user.service  # Linux systemd --user 单元模板
 └── .gitignore
 ```
 

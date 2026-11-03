@@ -12,12 +12,13 @@
 
 ## 概述
 
-`feishu-bridge` 是一个 Claude Code 技能，用 macOS launchd 托管飞书长连接桥接：
+`feishu-bridge` 是一个 Claude Code 技能，托管飞书长连接桥接，覆盖 macOS / Linux / Windows：
 飞书消息经 WebSocket 进来，拉起 `claude` CLI 子进程处理，回复再发回飞书。
 
 提供能力：
 
 - 一键安装（`bash scripts/install.sh`）
+- 跨平台：macOS (launchd) / Linux (systemd --user) / Windows（前台或计划任务）
 - 服务管理（启动 / 停止 / 重启 / 状态）
 - 飞书应用配置（命令行向导，Secret 不回显）
 - 健康监控（走桥接自带的管理套接字，拿真实会话数与队列深度）

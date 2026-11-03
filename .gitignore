@@ -12,3 +12,5 @@ logs/
 
 # 忽略工作区数据
 workspaces/*/state/
+__pycache__/
+*.pyc

@@ -1,11 +1,11 @@
 #!/bin/bash
-# feishu-bridge 健康检查
+# feishu-bridge 健康检查（跨平台：macOS / Linux）
 #
 # 输出 JSON（供其他工具消费），字段见下。
 #
 # 探针来源（本机实测，2026-10-13）：
 #   上游版本用 curl http://127.0.0.1:8090/health —— 那个端口根本没有监听，
-#    curl 永远失败，于是健康检查永远走 "(健康检查端点未配置)" 分支。
+#   curl 永远失败，于是健康检查永远走 "(健康检查端点未配置)" 分支。
 #   真实探针是桥接自带的管理套接字：
 #     ~/.feishu-bridge/control-claude-code.sock   （Unix socket，换行分隔 JSON）
 #     ~/.feishu-bridge/control-claude-code.token  （同一份 token，0600）
@@ -13,19 +13,26 @@
 #   方法表见 feishu_bridge/control_api.py：health / status / config / sessions /
 #   quota / logs / tasks / set_model / set_agent / stop_session / shutdown。
 #   其中 health 只返回 {"ok":True} 不验证任何东西，真正有信息量的是 status。
+#
+# v2.0.0 跨平台：Unix domain socket 是 POSIX 能力，Windows 原生没有
+#   （桥接若在 Windows 提供 named pipe 则另说）。所以 Windows 上不是
+#   "探测失败"，而是明确在输出里声明 probe=unsupported-platform，
+#   避免把"没探到"误读成"不健康"。
 set -uo pipefail
 
-BRIDGE_DIR="$HOME/.local/share/feishu-bridge"
-CONFIG_DIR="$HOME/.config/feishu-bridge"
-LOG_DIR="$BRIDGE_DIR/logs"
-CTRL_DIR="$HOME/.feishu-bridge"
-SOCK="$CTRL_DIR/control-claude-code.sock"
-TOKENF="$CTRL_DIR/control-claude-code.token"
-STATE_DIR="$BRIDGE_DIR/workspaces/claude-code/state/feishu-bridge"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/lib/platform.sh"
+platform::init
+
+CTRL_DIR="$STATE_HOME"
+SOCK="$(platform::control_socket)"
+TOKENF="$(platform::control_token)"
+STATE_DIR="$BRIDGE_DIR/workspaces/$BRIDGE_BOT/state/feishu-bridge"
 
 fail() { echo "{\"ok\": false, \"error\": \"$1\"}"; exit 1; }
 
-launchctl list | grep -q "com.feishu.bridge" || fail "服务未运行"
+# 服务在不在：平台抽象已把 launchd/systemd 收敛成同一格式
+[ -n "$(platform::service_status)" ] || fail "服务未运行"
 [ -f "$CONFIG_DIR/.env" ] || fail "配置缺失: $CONFIG_DIR/.env"
 [ -f "$CONFIG_DIR/config.json" ] || fail "配置缺失: $CONFIG_DIR/config.json"
 
@@ -35,11 +42,15 @@ SESSIONS=0
 QUEUE_DEPTH=0
 QUOTA="unknown"
 PROBE="launchd-only"
+# 平台无 Unix socket 时改写探针名，让消费方知道这是能力缺失而非故障
+if [ "$PLATFORM_OS" = "windows" ]; then
+    PROBE="unsupported-platform"
+fi
 
-if [ -S "$SOCK" ] && [ -r "$TOKENF" ]; then
+if [ "$PROBE" != "unsupported-platform" ] && [ -S "$SOCK" ] && [ -r "$TOKENF" ]; then
     TOKEN=$(cat "$TOKENF" 2>/dev/null || true)
     if [ -n "$TOKEN" ]; then
-        RESP=$(python3 - "$SOCK" "$TOKEN" <<'PY' 2>/dev/null
+        RESP=$("$PLATFORM_PYTHON" - "$SOCK" "$TOKEN" <<'PY' 2>/dev/null
 import json, socket, sys
 sock_path, token = sys.argv[1], sys.argv[2]
 req = json.dumps({"id": 1, "token": token, "method": "status", "params": {}})
@@ -62,7 +73,7 @@ PY
 )
         if [ -n "$RESP" ]; then
             PROBE="control-socket"
-            PARSED=$(printf '%s' "$RESP" | python3 -c "
+            PARSED=$(printf '%s' "$RESP" | "$PLATFORM_PYTHON" -c "
 import json,sys
 try: d=json.load(sys.stdin)
 except Exception: print('|||'); sys.exit()
@@ -95,22 +106,28 @@ fi
 
 # 套接字不可用时的退化口径：从会话状态文件数 chat 数
 if [ "$SESSIONS" = "0" ] && [ "$PROBE" = "launchd-only" ]; then
-    if [ -f "$STATE_DIR/sessions-claude-code.json" ]; then
-        SESSIONS=$(grep -o 'oc_[a-z0-9]\{8,\}' "$STATE_DIR/sessions-claude-code.json" | sort -u | wc -l | tr -d ' ')
+    if [ -f "$STATE_DIR/sessions-$BRIDGE_BOT.json" ]; then
+        SESSIONS=$(grep -o 'oc_[a-z0-9]\{8,\}' "$STATE_DIR/sessions-$BRIDGE_BOT.json" | sort -u | wc -l | tr -d ' ')
         PROBE="state-file-fallback"
     fi
 fi
 
 # 日志新鲜度：错误日志 5 分钟内有过写入视为活跃
+# mtime 取法跨平台（BSD -f%m / GNU -c%Y），已收敛进 platform::stat_mtime
 LOG_AGE="unknown"
 if [ -f "$LOG_DIR/bridge.err.log" ]; then
-    AGE=$(( $(date +%s) - $(stat -f%m "$LOG_DIR/bridge.err.log") ))
-    LOG_AGE="${AGE}s"
+    MT="$(platform::stat_mtime "$LOG_DIR/bridge.err.log" || echo '')"
+    if [ -n "$MT" ]; then
+        AGE=$(( $(date +%s) - MT ))
+        LOG_AGE="${AGE}s"
+    fi
 fi
 
 cat << EOF
 {
   "ok": true,
+  "platform": "$PLATFORM_OS",
+  "initManager": "$PLATFORM_INIT",
   "feishuApp": "${APP_ID}",
   "service": "running",
   "probe": "${PROBE}",

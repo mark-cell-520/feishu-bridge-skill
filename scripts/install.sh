@@ -3,6 +3,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/lib/platform.sh"
+platform::init
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 BRIDGE_DIR="$HOME/.local/share/feishu-bridge"
 CONFIG_DIR="$HOME/.config/feishu-bridge"
@@ -40,7 +42,7 @@ else
     echo "✅ 虚拟环境已存在: $VENV_DIR"
 fi
 
-"$VENV_DIR/bin/pip" install --upgrade feishu-bridge 2>&1 | tail -3
+"$(platform::venv_exe pip)" install --upgrade feishu-bridge 2>&1 | tail -3
 echo "✅ feishu-bridge 安装完成"
 echo ""
 
@@ -124,6 +126,7 @@ echo "  4. 查看日志: tail -f $LOG_DIR/bridge.err.log"
 echo ""
 echo "⚠️ 若要改权限（默认 bypassPermissions，deny 为空）："
 echo "   改包内那一份，不要改部署副本——"
-echo "   $VENV_DIR/lib/python3.11/site-packages/feishu_bridge/data/bridge-settings.json"
+SP_DIR="$("$PLATFORM_PYTHON" -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])' 2>/dev/null || echo "$VENV_DIR/lib/python3.11/site-packages")"
+echo "   $SP_DIR/feishu_bridge/data/bridge-settings.json"
 echo "   部署副本 ~/.feishu-bridge/bridge-settings.json 每次启动都会被无条件覆盖。"
 echo ""

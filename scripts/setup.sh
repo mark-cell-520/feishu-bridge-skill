@@ -2,6 +2,10 @@
 # feishu-bridge 配置向导
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/lib/platform.sh"
+platform::init
+
 CONFIG_DIR="$HOME/.config/feishu-bridge"
 VENV_DIR="$HOME/.venv-feishu-bridge"
 
@@ -59,7 +63,7 @@ echo "✅ 已保存环境变量: $CONFIG_DIR/.env (权限 600)"
 echo ""
 echo "测试凭证..."
 set -a; . "$CONFIG_DIR/.env"; set +a
-"$VENV_DIR/bin/python3" - << 'PY'
+"$(platform::venv_exe python3)" - << 'PY'
 import os, sys
 app_id = os.getenv("FEISHU_APP_ID")
 app_secret = os.getenv("FEISHU_APP_SECRET")

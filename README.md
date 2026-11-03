@@ -15,12 +15,13 @@ install, configure, start, stop, status, and health monitoring.
 ## Overview
 
 `feishu-bridge` is a Claude Code skill that manages the Feishu long-connection
-bridge under macOS launchd: Feishu messages arrive over WebSocket, a `claude`
+bridge on macOS / Linux / Windows: Feishu messages arrive over WebSocket, a `claude`
 CLI subprocess is spawned to handle them, and the reply is sent back to Feishu.
 
 It provides:
 
 - One-command install (`bash scripts/install.sh`)
+- Cross-platform: macOS (launchd) / Linux (systemd --user) / Windows (foreground or Task Scheduler)
 - Service management (start / stop / restart / status)
 - Feishu app configuration (CLI wizard, secret not echoed)
 - Health monitoring via the bridge's own control socket — real session count and

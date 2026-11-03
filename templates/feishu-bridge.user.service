@@ -1,0 +1,27 @@
+[Unit]
+Description=Feishu Bridge (Claude Code remote control)
+Documentation=https://github.com/mark-cell-520/feishu-bridge-skill
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# %h 由 systemd 展开为当前用户的 home，避免把绝对路径写死进单元文件。
+# 包装器负责 source ~/.config/feishu-bridge/.env 后再 exec 真正的桥接进程
+# —— 和 macOS 侧 plist 走 /bin/bash + wrapper 是同一条理由：桥接入口本身
+# 不读 .env，缺变量会直接起不来。
+ExecStart=%h/.local/share/feishu-bridge/start-bridge.sh
+WorkingDirectory=%h/.local/share/feishu-bridge
+Restart=on-failure
+RestartSec=5
+# append: 需要 systemd 236+（Debian 11 / Ubuntu 18.10 / RHEL 8 及以上）。
+# 用 file: 会每次启动截断日志，排障时会丢掉上一次的现场，所以选 append。
+StandardOutput=append:%h/.local/share/feishu-bridge/logs/bridge.log
+StandardError=append:%h/.local/share/feishu-bridge/logs/bridge.err.log
+# 桥接要拉 claude，PATH 里必须有 claude 所在目录；默认 /usr/local/bin
+# 之外补上 npm-global 与用户本地 bin，覆盖两种常见安装方式。
+Environment=PATH=%h/.npm-global/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
