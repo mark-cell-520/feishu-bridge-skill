@@ -67,13 +67,29 @@ def find_cli(explicit: str | None = None) -> str | None:
 
 
 def shutil_which(name: str) -> str | None:
+    """优先用标准库 shutil.which，它会正确处理 Windows 的 PATHEXT
+    （.exe/.bat/.cmd 等）与可执行位判断；标准库不可用时才退回手动遍历。"""
+    try:
+        import shutil
+        found = shutil.which(name)
+        if found:
+            return found
+    except Exception:
+        pass
+    # 手动兜底：补上常见 Windows 可执行后缀
+    exts = [""]
+    if os.name == "nt":
+        exts += [e.lower() for e in os.environ.get("PATHEXT", ".EXE;.BAT;.CMD").split(";") if e]
     for d in os.environ.get("PATH", "").split(os.pathsep):
         if not d:
             continue
-        for ext in ("", ".exe", ".bat", ".cmd"):
+        for ext in exts:
             p = Path(d) / (name + ext)
-            if p.is_file() and os.access(p, os.X_OK):
-                return str(p)
+            try:
+                if p.is_file() and os.access(p, os.X_OK):
+                    return str(p)
+            except OSError:
+                continue
     return None
 
 
@@ -135,9 +151,8 @@ def main() -> int:
             "跨会话发送请显式传 chat-id", EXIT_USAGE)
 
     if args.kind == "chat":
-        chat = args.chat_id or current_chat(args.bot)
-        if not chat:
-            die("状态文件里解析不出 chat_id", EXIT_USAGE)
+        # chat 子命令在上方已解析过 chat，这里直接打印，不重复解析。
+        # 原来此处又调了一次 current_chat，属冗余，且与上方结果可能不一致。
         print(chat)
         return EXIT_OK
 
@@ -145,8 +160,7 @@ def main() -> int:
         die(f"{args.kind} 缺少内容参数", EXIT_USAGE)
 
     if args.kind == "text":
-        if not args.payload:
-            die("文本内容为空", EXIT_USAGE)
+        # payload 非空已在外层统一校验，此处不重复检查
         return run_cli(cli, ["send-message", "--chat-id", chat,
                              "--text", args.payload])
 
@@ -157,7 +171,10 @@ def main() -> int:
     if not p.is_file():
         die(f"不是普通文件: {p}", EXIT_USAGE)
 
-    size = p.stat().st_size  # 跨平台，替代 stat -f%z / stat -c%s
+    try:
+        size = p.stat().st_size  # 跨平台，替代 stat -f%z / stat -c%s
+    except OSError as e:
+        die(f"无法读取文件大小: {p}（{e}）", EXIT_USAGE)
     default_max = IMG_MAX if args.kind == "image" else FILE_MAX
     limit = int(args.max_mb * 1024 * 1024) if args.max_mb else default_max
     if size > limit:
