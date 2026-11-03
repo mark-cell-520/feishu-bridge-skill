@@ -12,7 +12,7 @@ if [ -z "$(platform::service_status)" ]; then
     exit 0
 fi
 
-platform::info "停止 $BRIDGE_LABEL（$PLATFORM_OS/$PLATFORM_INIT）..."
+platform::info "停止 ${BRIDGE_LABEL}（$PLATFORM_OS/${PLATFORM_INIT}）..."
 platform::service_stop
 
 # bootout / systemctl stop 都是异步的，给一点时间让进程退出

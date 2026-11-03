@@ -113,7 +113,7 @@ UNITEOF
         exit 1
         ;;
     *)
-        platform::err "该平台无受支持的服务管理器（检测到 $PLATFORM_INIT）"
+        platform::err "该平台无受支持的服务管理器（检测到 ${PLATFORM_INIT}）"
         platform::err "可前台运行: bash $WRAPPER"
         exit 1
         ;;

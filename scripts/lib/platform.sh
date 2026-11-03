@@ -171,7 +171,7 @@ platform::service_start() {
             systemctl --user start "$BRIDGE_LABEL.service" 2>/dev/null
             ;;
         *)
-            platform::err "该平台无受支持的服务管理器（检测到 $PLATFORM_INIT）"
+            platform::err "该平台无受支持的服务管理器（检测到 ${PLATFORM_INIT}）"
             platform::err "请以前台方式运行：$WRAPPER"
             return 1
             ;;
@@ -191,7 +191,7 @@ platform::service_stop() {
             return 1
             ;;
         *)
-            platform::err "该平台无受支持的服务管理器（检测到 $PLATFORM_INIT）"
+            platform::err "该平台无受支持的服务管理器（检测到 ${PLATFORM_INIT}）"
             return 1
             ;;
     esac
@@ -236,7 +236,7 @@ platform::service_install() {
             systemctl --user enable "$BRIDGE_LABEL.service" 2>/dev/null
             ;;
         *)
-            platform::err "该平台无法安装服务（检测到 $PLATFORM_INIT）"
+            platform::err "该平台无法安装服务（检测到 ${PLATFORM_INIT}）"
             return 1
             ;;
     esac

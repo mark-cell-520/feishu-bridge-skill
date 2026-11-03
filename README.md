@@ -23,6 +23,11 @@ It provides:
 - One-command install (`bash scripts/install.sh`)
 - Cross-platform: macOS (launchd) / Linux (systemd --user) / Windows (foreground or Task Scheduler)
 - Service management (start / stop / restart / status)
+- One-shot diagnostics (`diagnose.sh`, human or `--json`) — platform, service, config, permissions, log health, Feishu API reachability, control socket, media dirs
+- Multi-workspace / multi-environment profiles (`ws.sh`)
+- Safe upgrade (`upgrade.sh`) that re-applies the permission patch pip would revert
+- Log tooling (`logs.sh`) with error aggregation — a single repeated warning shows once with a count
+- Cross-platform delivery (`send.py` core + `send.sh` / `send.ps1`)
 - Feishu app configuration (CLI wizard, secret not echoed)
 - Health monitoring via the bridge's own control socket — real session count and
   queue depth, not a probe against an HTTP port nothing listens on

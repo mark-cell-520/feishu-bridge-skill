@@ -76,6 +76,41 @@ FEISHU_BRIDGE_LABEL=com.feishu.bridge.dev \
 
 注意 `FEISHU_BRIDGE_LABEL` 同时决定 plist 名与 systemd unit 名，改它就改了服务身份。
 
+## 三之二、多环境实战：ws.sh
+
+手写 6 个环境变量切环境容易漏，漏一个的后果是服务看起来起来了，
+实际读写的是另一套数据。`scripts/ws.sh` 把整套环境存成命名配置：
+
+```bash
+# 保存当前环境为一套配置
+bash scripts/ws.sh add dev
+
+# 列出所有配置（标注哪套是当前，目录是否存在）
+bash scripts/ws.sh list
+
+# 切换到某套（输出 export 行，供 eval）
+eval "$(bash scripts/ws.sh use dev)"
+
+# 之后所有命令都认这套：不同的数据目录、不同的服务标签
+bash scripts/start-bridge.sh
+bash scripts/status.sh
+```
+
+配置存在 `~/.config/feishu-bridge/workspaces.json`，`current` 字段记录
+当前套名，`ws.sh use` 会同时更新它，所以不带环境变量的后续命令也认这套。
+
+典型用法是一台机器跑 dev 与 prod 两套桥接：
+
+```bash
+FEISHU_BRIDGE_HOME=~/.local/share/feishu-bridge-prod \
+FEISHU_BRIDGE_CONFIG_HOME=~/.config/feishu-bridge-prod \
+FEISHU_BRIDGE_LABEL=com.feishu.bridge.prod \
+  bash scripts/ws.sh add prod
+```
+
+注意 `FEISHU_BRIDGE_LABEL` 同时决定 plist 名与 systemd unit 名，
+改它就改了服务身份，这是两套服务能并存的关键。
+
 ## 四、各平台怎么托管服务
 
 ### macOS（launchd）

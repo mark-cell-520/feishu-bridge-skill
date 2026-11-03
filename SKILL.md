@@ -107,6 +107,11 @@ bash scripts/status.sh
 
 # 健康检查（JSON，供工具消费）
 bash scripts/health-check.sh
+bash scripts/diagnose.sh             # 一键诊断报告
+bash scripts/diagnose.sh --json      # 机器可读
+bash scripts/ws.sh list              # 多工作区配置
+bash scripts/upgrade.sh              # 平滑升级
+bash scripts/logs.sh errors          # 错误聚合
 # → {"ok":true,"probe":"control-socket","sessions":1,"queuePending":0,...}
 ```
 

@@ -20,6 +20,12 @@
 - 一键安装（`bash scripts/install.sh`）
 - 跨平台：macOS (launchd) / Linux (systemd --user) / Windows（前台或计划任务）
 - 服务管理（启动 / 停止 / 重启 / 状态）
+- 一键诊断报告（diagnose.sh，人读或 --json）——覆盖平台、服务、配置、权限、
+  日志健康度、飞书 API 连通性、控制套接字、媒体目录
+- 多工作区 / 多环境配置管理（ws.sh）
+- 平滑升级（upgrade.sh），会自动重打 pip 升级会还原的权限补丁
+- 日志工具（logs.sh）带错误聚合：刷屏的同一条警告只显示一次并给出次数
+- 跨平台投递（send.py 核心 + send.sh / send.ps1）
 - 飞书应用配置（命令行向导，Secret 不回显）
 - 健康监控（走桥接自带的管理套接字，拿真实会话数与队列深度）
 
