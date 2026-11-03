@@ -146,6 +146,42 @@ bash scripts/restart-bridge.sh    # 重启生效
 所以禁掉的是注定失败的请求，不是能用的功能；真正承载回复正文的
 `streaming_output` 不走这个函数。补丁会被 pip 升级覆盖，`upgrade.sh` 会提醒重打。
 
+## 10. 单轮越来越慢，最后按分钟计
+
+**症状**：同一会话连续聊一段时间后，每轮从几秒变成几分钟。
+日志里能看到 ctx 一路涨：
+
+```
+Idle auto-compact firing: sid=199ccc6d ctx=459542 tokens
+```
+
+**根因**：`worker.py` 的 `IdleCompactManager` 每轮成功后起一个
+50 分钟定时器，下一轮 `touch()` 会 cancel 旧定时器再起新的。
+两轮间隔小于 50 分钟，定时器永远被取消，compact 永远不触发。
+那 50 分钟的设计意图是省钱（prompt cache TTL 1 小时，趁热 compact
+按 cache_read 计价），没有覆盖密集连续对话这条路径。
+ctx 于是涨到几十万 token，每轮 `--resume` 全量重放。
+
+**先确认是不是这个问题**：
+
+```bash
+grep "Idle auto-compact firing" ~/.local/share/feishu-bridge/logs/bridge.err.log | tail -3
+```
+
+看 ctx 那一栏的数值。低于 5 万不是这个问题。
+
+**处置**：
+
+1. 立即见效：发 `/new` 开新会话（丢上下文，但马上快）
+2. 保住上下文：`/compact` 做一次定向压缩，摘要质量比自动压缩好
+3. 结构性修复：`bash scripts/patch-ctx-compact.sh apply`，
+   给 ctx 加硬上限（默认 15 万 token），超限 15 秒后入队压缩，
+   不等空闲；原有 50 分钟省钱路径不动。改完需重启桥接。
+
+阈值可用环境变量调：`FEISHU_BRIDGE_CTX_LIMIT`（token 数）、
+`FEISHU_BRIDGE_CTX_DELAY`（秒）。两个值解析失败或越界都退回默认，
+不会因为拼错环境变量让桥接起不来。
+
 ## 日志位置
 
 | 日志 | 位置 |

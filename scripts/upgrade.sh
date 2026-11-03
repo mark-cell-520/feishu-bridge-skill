@@ -138,6 +138,7 @@ check_patch() {
 check_patch "patch-ui.sh"        "ui.py（禁用失效的 agent_status 元素）" "ui.py.pre-patch-"
 check_patch "patch-post-image.sh" "main.py（图文混排时提取图片）"        "main.py.pre-post-image-"
 check_patch "patch-tool-list.sh"  "ui.py（工具列表编号逐行）"            "ui.py.pre-tool-list-"
+check_patch "patch-ctx-compact.sh" "worker.py（ctx 超限立即压缩）"        "worker.py.pre-ctx-compact-"
 
 # ── 4. 重启服务 ─────────────────────────────────────────────────
 step "4/5 重启服务"

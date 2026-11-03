@@ -5,7 +5,7 @@ install, configure, start, stop, status, and health monitoring.
 
 [中文](README.zh.md) | English
 
-> v2.21.0 (2026-11-03) — current.
+> v2.22.0 (2026-11-03) — current.
 >
 > History: v1.0.0 contained hardcoded `/Users/apple/...` paths, wrong log
 > filenames (`bridge-stdout.log` / `bridge-stderr.log`), a wrong launchd label
@@ -66,6 +66,7 @@ bash scripts/watchdog.sh --once      # single health check
 bash scripts/patch-ui.sh status      # optional patch status
 bash scripts/patch-post-image.sh status   # image-in-post fix status
 bash scripts/patch-tool-list.sh status    # numbered tool list status
+bash scripts/patch-ctx-compact.sh status  # ctx hard limit forces compact
 bash scripts/setup-format-rule.sh status  # output format rule injection status
 bash scripts/send.sh text "message" # deliver to the current Feishu chat
 ```

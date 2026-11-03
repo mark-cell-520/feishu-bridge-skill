@@ -5,7 +5,7 @@
 
 [English](README.md) | 中文
 
-> v2.21.0（2026-11-03）— 当前版本。
+> v2.22.0（2026-11-03）— 当前版本。
 >
 > 历史：1.0.0 里的 `/Users/apple/` 绝对路径、`bridge-stdout.log` 日志名、
 > `com.heartflow.mcp` 标签、以及整条 HeartFlow 判别门禁都与实况不符。
@@ -61,6 +61,7 @@ bash scripts/watchdog.sh --once      # 单次看护检查
 bash scripts/patch-ui.sh status      # 可选补丁状态
 bash scripts/patch-post-image.sh status   # 图文混排修复状态
 bash scripts/patch-tool-list.sh status    # 工具进度编号化状态
+bash scripts/patch-ctx-compact.sh status  # ctx 超限立即压缩状态
 bash scripts/setup-format-rule.sh status  # 输出规则注入状态
 bash scripts/send.sh text "消息"     # 投递到当前飞书会话
 ```
